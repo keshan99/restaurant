@@ -1,4 +1,4 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Param } from '@nestjs/common';
 import { AppService } from './app.service';
 import type { Contact } from './menu/menu.types';
 
@@ -16,8 +16,8 @@ export class AppController {
     return { ok: true };
   }
 
-  @Get('api/contact')
-  getContact(): Contact {
-    return this.appService.getContact();
+  @Get('api/:slug/contact')
+  async getContact(@Param('slug') slug: string): Promise<Contact> {
+    return this.appService.getContact(slug);
   }
 }

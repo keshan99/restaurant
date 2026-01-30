@@ -1,19 +1,32 @@
-import { Injectable } from '@nestjs/common';
-import { Contact } from './menu/menu.types';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { SupabaseService } from './supabase/supabase.service';
+import type { Contact } from './menu/menu.types';
 
 @Injectable()
 export class AppService {
-  private readonly CONTACT: Contact = {
-    restaurantName: 'The Terracotta Bistro',
-    phoneDisplay: '(555) 123-4567',
-    phoneTel: '+15551234567',
-  };
+  constructor(private readonly supabaseService: SupabaseService) {}
 
   getHello(): string {
     return 'Hello World!';
   }
 
-  getContact(): Contact {
-    return this.CONTACT;
+  async getContact(slug: string): Promise<Contact> {
+    const supabase = this.supabaseService.getClient();
+
+    const { data, error } = await supabase
+      .from('restaurants')
+      .select('name, phone_display, phone_tel')
+      .eq('slug', slug)
+      .single();
+
+    if (error || !data) {
+      throw new NotFoundException(`Restaurant not found: ${slug}`);
+    }
+
+    return {
+      restaurantName: data.name,
+      phoneDisplay: data.phone_display,
+      phoneTel: data.phone_tel,
+    };
   }
 }

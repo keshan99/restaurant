@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { getContact, getMenu3Days } from "../lib/api.js";
 import ReservationModal from "../ui/ReservationModal.jsx";
 import MenuSection from "../ui/MenuSection.jsx";
@@ -16,6 +16,7 @@ function formatTabLabel(dateKey, index) {
 }
 
 export default function Home() {
+  const { slug } = useParams();
   const [data, setData] = useState(null);
   const [contact, setContact] = useState(null);
   const [activeDateKey, setActiveDateKey] = useState(null);
@@ -23,10 +24,12 @@ export default function Home() {
   const [error, setError] = useState("");
 
   useEffect(() => {
+    if (!slug) return;
+    
     (async () => {
       // Load menu
       try {
-        const menuPayload = await getMenu3Days();
+        const menuPayload = await getMenu3Days(slug);
         setData(menuPayload);
         setActiveDateKey(menuPayload?.menus?.[0]?.date ?? null);
       } catch (e) {
@@ -35,13 +38,13 @@ export default function Home() {
 
       // Load contact info independently (non-critical)
       try {
-        const contactPayload = await getContact();
+        const contactPayload = await getContact(slug);
         setContact(contactPayload);
       } catch (e) {
         console.warn("Failed to load contact info", e);
       }
     })();
-  }, []);
+  }, [slug]);
 
   const menusByDate = useMemo(() => {
     const m = new Map();
@@ -65,7 +68,7 @@ export default function Home() {
                 />
               </svg>
             </div>
-            <h2 className="text-xl font-black tracking-tight">The Terracotta Bistro</h2>
+            <h2 className="text-xl font-black tracking-tight">{contact?.restaurantName ?? "Loading..."}</h2>
           </div>
 
           <nav className="hidden md:flex flex-1 justify-center gap-10">
@@ -204,7 +207,7 @@ export default function Home() {
                   />
                 </svg>
               </div>
-              <h3 className="font-black text-lg">The Terracotta Bistro</h3>
+              <h3 className="font-black text-lg">{contact?.restaurantName ?? "Restaurant"}</h3>
             </div>
             <p className="text-muted-brown dark:text-white/50 text-sm max-w-sm">
               Exquisite dining meets everyday comfort. Our menu changes with the seasons and the local harvest.
